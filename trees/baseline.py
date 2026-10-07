@@ -1,32 +1,10 @@
 from .node import Node
 
 
-def _h(n):
-    return n.height if n else 0
-
-
-def _update(n):
-    n.height = 1 + max(_h(n.left), _h(n.right))
-
-
-def _rot_right(y):
-    x = y.left
-    y.left, x.right = x.right, y
-    _update(y)
-    _update(x)
-    return x
-
-
-def _rot_left(x):
-    y = x.right
-    x.right, y.left = y.left, x
-    _update(x)
-    _update(y)
-    return y
-
-
-class AVL:
-    """Árbol AVL: balanceo estricto en cada inserción (línea de comparación)."""
+class BaselineTree:
+    """Árbol binario de búsqueda balanceado por construcción (punto medio).
+    No se rebalancea dinámicamente; sirve como baseline estático óptimo en altura.
+    """
 
     def __init__(self):
         self.root = None
@@ -39,35 +17,36 @@ class AVL:
         self.rotations = 0
         self.rehashes = 0
 
-    def insert(self, key, value=None):
-        self.root = self._insert(self.root, key, value)
+    def build_from_sorted(self, items):
+        """Construye árbol balanceado a partir de lista ordenada de (key, value)."""
+        self.root = self._build_recursive(items, 0, len(items) - 1)
 
-    def _insert(self, n, key, value):
-        if n is None:
-            return Node(key, value)
-        self.comparisons += 1
-        if key == n.key:
-            n.value = value
-            return n
-        if key < n.key:
-            n.left = self._insert(n.left, key, value)
-        else:
-            n.right = self._insert(n.right, key, value)
-        _update(n)
-        bal = _h(n.left) - _h(n.right)
-        if bal > 1:
-            if _h(n.left.left) < _h(n.left.right):
-                n.left = _rot_left(n.left)
-                self.rotations += 1
-            self.rotations += 1
-            return _rot_right(n)
-        if bal < -1:
-            if _h(n.right.right) < _h(n.right.left):
-                n.right = _rot_right(n.right)
-                self.rotations += 1
-            self.rotations += 1
-            return _rot_left(n)
-        return n
+    def _build_recursive(self, items, lo, hi):
+        if lo > hi:
+            return None
+        mid = (lo + hi) // 2
+        key, value = items[mid]
+        node = Node(key, value)
+        node.left = self._build_recursive(items, lo, mid - 1)
+        node.right = self._build_recursive(items, mid + 1, hi)
+        return node
+
+    def insert(self, key, value=None):
+        if self.root is None:
+            self.root = Node(key, value)
+            return
+        cur = self.root
+        while True:
+            self.comparisons += 1
+            if key == cur.key:
+                cur.value = value
+                return
+            side = "left" if key < cur.key else "right"
+            nxt = getattr(cur, side)
+            if nxt is None:
+                setattr(cur, side, Node(key, value))
+                return
+            cur = nxt
 
     def search(self, key):
         cur = self.root
@@ -79,7 +58,17 @@ class AVL:
         return None
 
     def height(self):
-        return _h(self.root)
+        if self.root is None:
+            return 0
+        best, stack = 0, [(self.root, 1)]
+        while stack:
+            n, d = stack.pop()
+            best = max(best, d)
+            if n.left:
+                stack.append((n.left, d + 1))
+            if n.right:
+                stack.append((n.right, d + 1))
+        return best
 
     def avg_depth(self):
         if self.root is None:

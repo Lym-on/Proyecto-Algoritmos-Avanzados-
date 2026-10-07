@@ -1,17 +1,37 @@
 from .node import Node
 
 
-class SplayTree:
-    """Splay tree (top-down, Sleator & Tarjan).
+def _rotate_right(t):
+    """Rotación simple a la derecha: t se convierte en hijo derecho de su izquierdo."""
+    y = t.left
+    t.left, y.right = y.right, t
+    return y
 
-    Cada acceso (búsqueda o inserción) lleva la clave accedida a la raíz,
-    así los elementos consultados con frecuencia quedan cerca de ella.
+
+def _rotate_left(t):
+    """Rotación simple a la izquierda: t se convierte en hijo izquierdo de su derecho."""
+    y = t.right
+    t.right, y.left = y.left, t
+    return y
+
+
+class SplayTree:
+    """Splay tree (top-down con nodo cabecera, Sleator & Tarjan).
+
+    Cada acceso (búsqueda o inserción) lleva la clave accedida a la raíz.
     Costo amortizado O(log n) por operación.
     """
 
     def __init__(self):
         self.root = None
         self.comparisons = 0
+        self.rotations = 0
+        self.rehashes = 0
+
+    def reset_counters(self):
+        self.comparisons = 0
+        self.rotations = 0
+        self.rehashes = 0
 
     def _splay(self, key):
         if self.root is None:
@@ -25,30 +45,31 @@ class SplayTree:
                 if t.left is None:
                     break
                 self.comparisons += 1
-                if key < t.left.key:  # zig-zig
-                    y = t.left
-                    t.left, y.right = y.right, t
-                    t = y
+                if key < t.left.key:  # zig-zig: rotar en t (abuelo)
+                    t = _rotate_right(t)
+                    self.rotations += 1
                     if t.left is None:
                         break
-                r.left = t  # enlazar a la derecha
+                # zig: mover t a árbol derecho
+                r.left = t
                 r = t
                 t = t.left
             elif key > t.key:
                 if t.right is None:
                     break
                 self.comparisons += 1
-                if key > t.right.key:  # zag-zag
-                    y = t.right
-                    t.right, y.left = y.left, t
-                    t = y
+                if key > t.right.key:  # zag-zag: rotar en t (abuelo)
+                    t = _rotate_left(t)
+                    self.rotations += 1
                     if t.right is None:
                         break
-                l.right = t  # enlazar a la izquierda
+                # zag: mover t a árbol izquierdo
+                l.right = t
                 l = t
                 t = t.right
             else:
                 break
+        # Reensamblar
         l.right, r.left = t.left, t.right
         t.left, t.right = header.right, header.left
         self.root = t
@@ -88,3 +109,43 @@ class SplayTree:
             if n.right:
                 stack.append((n.right, d + 1))
         return best
+
+    def avg_depth(self):
+        if self.root is None:
+            return 0.0
+        total_depth = 0
+        count = 0
+        stack = [(self.root, 1)]
+        while stack:
+            n, d = stack.pop()
+            total_depth += d
+            count += 1
+            if n.left:
+                stack.append((n.left, d + 1))
+            if n.right:
+                stack.append((n.right, d + 1))
+        return total_depth / count if count else 0.0
+
+    def max_depth(self):
+        return self.height()
+
+    def depth_percentiles(self, p95=True, p99=True):
+        if self.root is None:
+            return {}
+        depths = []
+        stack = [(self.root, 1)]
+        while stack:
+            n, d = stack.pop()
+            depths.append(d)
+            if n.left:
+                stack.append((n.left, d + 1))
+            if n.right:
+                stack.append((n.right, d + 1))
+        depths.sort()
+        n = len(depths)
+        res = {}
+        if p95:
+            res["p95"] = depths[int(0.95 * n)] if n > 0 else 0
+        if p99:
+            res["p99"] = depths[int(0.99 * n)] if n > 0 else 0
+        return res
