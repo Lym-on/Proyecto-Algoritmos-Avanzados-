@@ -8,3 +8,7 @@ class Node:
         self.left = None
         self.right = None
         self.height = 1  # solo lo usa el AVL
+
+    def reset_counters(self):
+        """Para compatibilidad con árboles que usan contadores en nodos."""
+        pass

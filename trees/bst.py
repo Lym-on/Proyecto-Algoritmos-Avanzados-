@@ -7,6 +7,13 @@ class BST:
     def __init__(self):
         self.root = None
         self.comparisons = 0
+        self.rotations = 0
+        self.rehashes = 0
+
+    def reset_counters(self):
+        self.comparisons = 0
+        self.rotations = 0
+        self.rehashes = 0
 
     def insert(self, key, value=None):
         if self.root is None:
@@ -46,3 +53,43 @@ class BST:
             if n.right:
                 stack.append((n.right, d + 1))
         return best
+
+    def avg_depth(self):
+        if self.root is None:
+            return 0.0
+        total_depth = 0
+        count = 0
+        stack = [(self.root, 1)]
+        while stack:
+            n, d = stack.pop()
+            total_depth += d
+            count += 1
+            if n.left:
+                stack.append((n.left, d + 1))
+            if n.right:
+                stack.append((n.right, d + 1))
+        return total_depth / count if count else 0.0
+
+    def max_depth(self):
+        return self.height()
+
+    def depth_percentiles(self, p95=True, p99=True):
+        if self.root is None:
+            return {}
+        depths = []
+        stack = [(self.root, 1)]
+        while stack:
+            n, d = stack.pop()
+            depths.append(d)
+            if n.left:
+                stack.append((n.left, d + 1))
+            if n.right:
+                stack.append((n.right, d + 1))
+        depths.sort()
+        n = len(depths)
+        res = {}
+        if p95:
+            res["p95"] = depths[int(0.95 * n)] if n > 0 else 0
+        if p99:
+            res["p99"] = depths[int(0.99 * n)] if n > 0 else 0
+        return res
