@@ -376,6 +376,17 @@ def run_all_workloads(n_blocks=200, tx_per_block=10, n_queries=5000, seed=42, la
     return all_results
 
 
+def run(n_blocks=50, tx_per_block=10, n_queries=2000, seed=42, lambda_val=1.0):
+    """Entry point used by `main.py` and by the script itself."""
+    return run_all_workloads(
+        n_blocks=n_blocks,
+        tx_per_block=tx_per_block,
+        n_queries=n_queries,
+        seed=seed,
+        lambda_val=lambda_val,
+    )
+
+
 if __name__ == "__main__":
     # Quick test run
-    results = run_all_workloads(n_blocks=50, tx_per_block=10, n_queries=2000, seed=42)
+    run(n_blocks=50, tx_per_block=10, n_queries=2000, seed=42)
