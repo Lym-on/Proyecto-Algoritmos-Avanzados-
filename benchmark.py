@@ -18,6 +18,7 @@ from typing import List, Dict, Any
 
 from blockchain import build_chain
 from trees import AVL, BST, SplayTree, BaselineTree, KnuthDP
+from trees.auth_tree import create_authenticated_tree
 from trees.node import Node
 from workloads import generate_workload, get_workload_config
 
@@ -237,8 +238,51 @@ def run_optimal_bst(txs, queries, lambda_val=1.0):
     return result, optimal_cost
 
 
+def run_authenticated_algorithm(tree_type: str, txs, queries, lambda_val=1.0):
+    """Run an authenticated algorithm and collect metrics including rehashes."""
+    auth_tree = create_authenticated_tree(tree_type)
+    
+    # Build initial index
+    for tx_id, block_idx in txs:
+        auth_tree.base_tree.insert(tx_id, block_idx)
+    auth_tree.build_from_base()
+    auth_tree.reset_counters()
+    
+    t0 = time.perf_counter()
+    for q in queries:
+        auth_tree.search(q)
+    t1 = time.perf_counter()
+    
+    result = ExperimentResult(
+        workload="",
+        n=len(txs),
+        queries=len(queries),
+        seed=0,
+        algorithm=f"{tree_type}_Auth",
+        comparisons_total=auth_tree.base_tree.comparisons,
+        comparisons_avg=auth_tree.base_tree.comparisons / len(queries),
+        time_total=t1 - t0,
+        time_per_query=(t1 - t0) / len(queries),
+        height=auth_tree.height(),
+        avg_depth=auth_tree.avg_depth(),
+        max_depth=auth_tree.max_depth(),
+        p95_depth=auth_tree.depth_percentiles().get("p95", 0),
+        p99_depth=auth_tree.depth_percentiles().get("p99", 0),
+        rotations=getattr(auth_tree.base_tree, 'rotations', 0),
+        rotations_per_access=getattr(auth_tree.base_tree, 'rotations', 0) / len(queries),
+        rehashes=auth_tree.rehashes,
+        rehashes_per_access=auth_tree.rehashes / len(queries),
+        cost_access=auth_tree.base_tree.comparisons,
+        cost_reorg=(getattr(auth_tree.base_tree, 'rotations', 0) + auth_tree.rehashes) * lambda_val,
+        cost_total=auth_tree.base_tree.comparisons + (getattr(auth_tree.base_tree, 'rotations', 0) + auth_tree.rehashes) * lambda_val,
+        lambda_val=lambda_val,
+    )
+    return result, auth_tree
+
+
 def run_experiment(n_blocks=200, tx_per_block=10, n_queries=5000, seed=42,
-                   workload="uniform", workload_params=None, lambda_val=1.0):
+                   workload="uniform", workload_params=None, lambda_val=1.0,
+                   include_authenticated=False):
     """Run a single experiment configuration."""
     if workload_params is None:
         workload_params = {}
@@ -264,13 +308,22 @@ def run_experiment(n_blocks=200, tx_per_block=10, n_queries=5000, seed=42,
         result.seed = seed
         results.append(result)
     
+    # Run authenticated versions if requested
+    if include_authenticated:
+        auth_types = ["BST", "AVL", "Splay", "Baseline"]
+        for tree_type in auth_types:
+            result, _ = run_authenticated_algorithm(tree_type, txs, queries, lambda_val)
+            result.workload = workload
+            result.seed = seed
+            results.append(result)
+    
     # Run optimal BST (offline)
     opt_result, opt_cost = run_optimal_bst(txs, queries, lambda_val)
     opt_result.workload = workload
     opt_result.seed = seed
     results.append(opt_result)
     
-    # Normalize costs against optimal (opt_cost is per-search, multiply by n_queries)
+    # Normalize costs against optimal
     opt_total_cost = opt_cost * len(queries)
     for r in results:
         if opt_total_cost > 0:
@@ -281,17 +334,17 @@ def run_experiment(n_blocks=200, tx_per_block=10, n_queries=5000, seed=42,
 
 def print_results(results: List[ExperimentResult]):
     """Print formatted results table."""
-    header = (f"{'Workload':<15}{'Algoritmo':<12}{'Comp/cons':>10}{'Altura':>7}"
-              f"{'Prof.Prom':>9}{'p99':>5}{'Rot/acc':>9}{'CostoAcc':>10}"
-              f"{'CostoReorg':>11}{'CostoTot':>10}{'Norm.Cost':>10}")
+    header = (f"{'Workload':<15}{'Algoritmo':<14}{'Comp/cons':>10}{'Altura':>7}"
+              f"{'Prof.Prom':>9}{'p99':>5}{'Rot/acc':>9}{'Rehash/acc':>11}"
+              f"{'CostoAcc':>10}{'CostoReorg':>11}{'CostoTot':>10}{'Norm.Cost':>10}")
     print(header)
     print("-" * len(header))
     
     for r in results:
-        print(f"{r.workload:<15}{r.algorithm:<12}{r.comparisons_avg:>10.2f}"
+        print(f"{r.workload:<15}{r.algorithm:<14}{r.comparisons_avg:>10.2f}"
               f"{r.height:>7}{r.avg_depth:>9.2f}{r.p99_depth:>5}"
-              f"{r.rotations_per_access:>9.3f}{r.cost_access:>10.1f}"
-              f"{r.cost_reorg:>11.1f}{r.cost_total:>10.1f}{r.normalized_cost:>10.3f}")
+              f"{r.rotations_per_access:>9.3f}{r.rehashes_per_access:>11.3f}"
+              f"{r.cost_access:>10.1f}{r.cost_reorg:>11.1f}{r.cost_total:>10.1f}{r.normalized_cost:>10.3f}")
 
 
 def run_all_workloads(n_blocks=200, tx_per_block=10, n_queries=5000, seed=42, lambda_val=1.0):
