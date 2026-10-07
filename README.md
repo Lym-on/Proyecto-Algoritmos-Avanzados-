@@ -1,5 +1,14 @@
 # Evaluación de árboles de búsqueda aplicados a una blockchain
 
+## 👥 Autores
+
+| Nombre | Código |
+|--------|--------|
+| Ayte Noa, Alvaro Alonso | 234892 |
+| Puma Sullcapuma Lym Kurth | 235394 |
+| Quispe Chura Jhon Efrain | 215733 |
+| Suca Hilare Gabriel Caleb | 234898 |
+
 Proyecto académico de **Algoritmos Avanzados** que compara tres estructuras de
 datos para buscar transacciones dentro de una blockchain:
 
