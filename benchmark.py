@@ -32,8 +32,9 @@ def make_queries(txs, kind, n_queries, rng):
         cut = int(len(ids) * 0.8)
         old, recent = ids[:cut], ids[cut:]
         return [rng.choice(recent if rng.random() < 0.8 else old) for _ in range(n_queries)]
-    if kind == "zipf":
-        weights = [1 / (i + 1) for i in range(len(ids))]
+    if kind.startswith("zipf"):
+        alpha = float(kind[4:]) if len(kind) > 4 else 1.0
+        weights = [1 / (i + 1) ** alpha for i in range(len(ids))]
         hot = ids[:]
         rng.shuffle(hot)
         return rng.choices(hot, weights=weights, k=n_queries)
@@ -49,7 +50,7 @@ def run(n_blocks=200, tx_per_block=10, n_queries=500_000, seed=42):
     header = f"{'Escenario':<11}{'Árbol':<13}{'Comp/consulta':>15}{'Altura':>8}{'Tiempo (s)':>12}"
     print(header)
     print("-" * len(header))
-    for kind in ("uniforme", "localidad", "zipf"):
+    for kind in ("uniforme", "localidad", "zipf", "zipf1.5", "zipf2"):
         queries = make_queries(txs, kind, n_queries, random.Random(seed))
         for cls in (BST, AVL, SplayTree, SplaySigZag, SplaySimple):
             tree = build_index(cls, txs)
