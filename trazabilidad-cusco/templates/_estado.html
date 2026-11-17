@@ -1,0 +1,27 @@
+{% macro badge(e) %}
+  {% if e.nivel == 'ok' %}<span class="badge b-ok" title="{{ e.motivo }}">✓ Íntegro</span>
+  {% elif e.nivel == 'malo' %}<span class="badge b-malo" title="{{ e.motivo }}">✗ Alterado</span>
+  {% else %}<span class="badge b-afectado" title="{{ e.motivo }}">⚠ Afectado</span>{% endif %}
+{% endmacro %}
+{% macro estado_cadena(r) %}
+  {% if r.valida %}
+    <div class="banner b-ok">✓ Cadena íntegra: los {{ r.bloques }} bloques verifican su hash y su enlace con el anterior.</div>
+  {% else %}
+    <div class="banner b-malo">✗ Cadena alterada desde el bloque <a href="/bloque/{{ r.primero_malo }}">#{{ r.primero_malo }}</a>. Los datos de ese bloque no coinciden con su hash.</div>
+  {% endif %}
+{% endmacro %}
+{% macro tabla_bloques(filas) %}
+<div class="scroll"><table class="tabla">
+  <tr><th>Bloque</th><th>Lote</th><th>Etapa</th><th>Hash</th><th>Registrado</th><th>Estado</th></tr>
+  {% for b, e in filas %}
+  <tr class="fila-{{ e.nivel }}">
+    <td><a href="/bloque/{{ b.index }}">#{{ b.index }}</a></td>
+    <td><a href="/lote/{{ b.lote }}">{{ b.lote }}</a></td>
+    <td>{{ b.etapa }}</td>
+    <td class="hash" title="{{ b.hash }}">{{ b.hash|hash_corto }}</td>
+    <td>{{ b.timestamp|fecha }}</td>
+    <td>{{ badge(e) }}</td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% endmacro %}
