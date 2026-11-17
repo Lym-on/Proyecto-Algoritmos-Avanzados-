@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}Origen Cusco · Explorador{% endblock %}</title>
+<style>
+  :root{--bg:#0b0f14;--panel:#121923;--panel2:#18212d;--borde:#243040;--texto:#e6edf3;--suave:#8b98a9;
+        --acento:#f7931a;--ok:#2ea043;--mal:#f85149;--aviso:#d29922;--link:#58a6ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--texto);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+  .mono,.hash,code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  header{background:var(--panel);border-bottom:1px solid var(--borde)}
+  .barra{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .logo{font-weight:700;font-size:1.1rem;color:var(--texto)} .logo b{color:var(--acento)}
+  nav a{color:var(--suave);margin-right:14px} nav a:hover{color:var(--texto);text-decoration:none}
+  form.buscar{flex:1;min-width:240px;display:flex;gap:8px}
+  form.buscar input{flex:1;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);padding:9px 12px;font-size:.95rem}
+  form.buscar button{background:var(--acento);color:#111;border:0;border-radius:8px;padding:0 16px;font-weight:600;cursor:pointer}
+  main{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:1.35rem;margin:.2em 0 .6em} h2{font-size:1.05rem;margin:0}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0 22px}
+  .card{background:var(--panel);border:1px solid var(--borde);border-radius:10px;padding:14px 16px}
+  .card small{color:var(--suave);display:block;text-transform:uppercase;letter-spacing:.04em;font-size:.72rem}
+  .card .v{font-size:1.5rem;font-weight:700;margin-top:2px}
+  .panel{background:var(--panel);border:1px solid var(--borde);border-radius:10px;margin:0 0 22px;overflow:hidden}
+  .panel>header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--borde);background:var(--panel2)}
+  .tabla{width:100%;border-collapse:collapse}
+  .scroll{overflow-x:auto}
+  .tabla th{color:var(--suave);font-weight:500;text-align:left;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;padding:10px 16px;border-bottom:1px solid var(--borde);white-space:nowrap}
+  .tabla td{padding:11px 16px;border-bottom:1px solid var(--borde);white-space:nowrap}
+  .tabla tr:last-child td{border-bottom:0}
+  .tabla tr.fila-malo td{background:rgba(248,81,73,.08)} .tabla tr.fila-afectado td{background:rgba(210,153,34,.07)}
+  .hash{font-size:.85rem;color:var(--link)} .zeros{color:var(--ok);font-weight:700}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid}
+  .b-ok{color:var(--ok);border-color:rgba(46,160,67,.5);background:rgba(46,160,67,.1)}
+  .b-malo{color:var(--mal);border-color:rgba(248,81,73,.5);background:rgba(248,81,73,.1)}
+  .b-afectado{color:var(--aviso);border-color:rgba(210,153,34,.5);background:rgba(210,153,34,.1)}
+  .banner{border-radius:10px;padding:14px 16px;margin:0 0 20px;font-weight:600;border:1px solid}
+  .kv{display:grid;grid-template-columns:200px 1fr;margin:0}
+  .kv>dt,.kv>dd{padding:12px 16px;margin:0;border-bottom:1px solid var(--borde)}
+  .kv>dt{color:var(--suave)} .kv>dd{word-break:break-all}
+  .kv>dt:last-of-type,.kv>dd:last-of-type{border-bottom:0}
+  pre{margin:0;background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px 12px;font-size:.85rem;white-space:pre-wrap;word-break:break-word}
+  .cadena{display:flex;flex-direction:column;gap:0}
+  .eslabon{background:var(--panel);border:1px solid var(--borde);border-left:4px solid var(--ok);border-radius:10px;padding:14px 16px}
+  .eslabon.malo{border-left-color:var(--mal)} .eslabon.afectado{border-left-color:var(--aviso)}
+  .eslabon .cab{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .eslabon p{margin:2px 0;font-size:.92rem} .eslabon .k{color:var(--suave)}
+  .union{height:22px;border-left:2px dashed var(--borde);margin-left:24px}
+  .paginas{display:flex;gap:10px;justify-content:center;margin-top:14px;color:var(--suave)}
+  .pie{color:var(--suave);font-size:.8rem;margin-top:26px}
+  @media(max-width:640px){.kv{grid-template-columns:1fr}.kv>dt{border-bottom:0;padding-bottom:0}.tabla th,.tabla td{padding:10px}}
+</style>
+</head>
+<body>
+<header><div class="barra">
+  <a class="logo" href="/">⛓ Origen <b>Cusco</b></a>
+  <nav><a href="/">Inicio</a><a href="/cadena">Cadena</a></nav>
+  <form class="buscar" action="/buscar">
+    <input name="q" placeholder="Código de lote, nº de bloque o hash…" required>
+    <button>Buscar</button>
+  </form>
+</div></header>
+<main>{% block contenido %}{% endblock %}</main>
+</body>
+</html>

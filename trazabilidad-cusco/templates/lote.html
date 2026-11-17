@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_estado.html" import badge %}
+{% block titulo %}{{ nombre }} · Origen Cusco{% endblock %}
+{% block contenido %}
+<h1>{{ nombre }}</h1>
+<p class="mono" style="color:var(--suave);margin-top:-8px">{{ codigo }}</p>
+{% if ok %}
+  <div class="banner b-ok">✓ Historial verificado: ningún dato de este lote ha sido modificado.</div>
+{% else %}
+  <div class="banner b-malo">✗ ¡Atención! La cadena fue alterada. No confíes en la información de este lote.</div>
+{% endif %}
+
+<div class="cadena">
+{% for b, e in filas %}
+  {% if not loop.first %}<div class="union"></div>{% endif %}
+  <div class="eslabon {{ e.nivel }}">
+    <div class="cab"><h2>{{ loop.index }}. {{ b.etapa }}</h2>{{ badge(e) }}</div>
+    {% for k, v in b.datos.items() %}<p><span class="k">{{ k|capitalize }}:</span> {{ v }}</p>{% endfor %}
+    <p class="hash" style="margin-top:8px"><span class="k">Bloque</span> <a href="/bloque/{{ b.index }}">#{{ b.index }}</a>
+       · <span class="k">Hash</span> {{ b.hash|hash_corto }}</p>
+  </div>
+{% endfor %}
+</div>
+<p class="pie"><a href="/">← Volver al explorador</a></p>
+{% endblock %}

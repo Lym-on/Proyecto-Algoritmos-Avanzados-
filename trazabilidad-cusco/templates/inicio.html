@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_estado.html" import estado_cadena, tabla_bloques %}
+{% block contenido %}
+<h1>Explorador de trazabilidad</h1>
+{{ estado_cadena(r) }}
+<div class="cards">
+  <div class="card"><small>Altura (bloques)</small><div class="v">{{ r.bloques }}</div></div>
+  <div class="card"><small>Lotes registrados</small><div class="v">{{ r.lotes }}</div></div>
+  <div class="card"><small>Prueba de trabajo</small><div class="v">{{ r.dificultad }} ceros</div></div>
+  <div class="card"><small>Índice de búsqueda</small><div class="v" style="font-size:1.1rem">{{ r.arbol|capitalize }} tree</div><small style="text-transform:none">{{ r.comparaciones }} comparaciones</small></div>
+</div>
+
+<section class="panel">
+  <header><h2>Últimos bloques</h2><a href="/cadena">Ver todos →</a></header>
+  {{ tabla_bloques(ultimos) }}
+</section>
+
+<section class="panel">
+  <header><h2>Lotes registrados</h2></header>
+  <div class="scroll"><table class="tabla">
+    <tr><th>Código</th><th>Producto</th></tr>
+    {% for codigo, info in lotes.items() %}
+    <tr><td><a href="/lote/{{ codigo }}">{{ codigo }}</a></td><td>{{ info.producto }}</td></tr>
+    {% endfor %}
+  </table></div>
+</section>
+<p class="pie">Demostración: <a href="/demo/alterar">simular alteración de un bloque</a> · <a href="/demo/restaurar">restaurar</a></p>
+{% endblock %}

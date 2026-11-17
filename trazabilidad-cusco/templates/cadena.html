@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_estado.html" import estado_cadena, tabla_bloques %}
+{% block contenido %}
+<h1>Cadena de bloques</h1>
+{{ estado_cadena(r) }}
+<section class="panel">
+  <header><h2>{{ r.bloques }} bloques</h2><span style="color:var(--suave)">más recientes primero</span></header>
+  {{ tabla_bloques(filas) }}
+</section>
+<div class="paginas">
+  {% if pagina > 1 %}<a href="/cadena?pagina={{ pagina - 1 }}">← Anterior</a>{% endif %}
+  <span>Página {{ pagina }} de {{ total_pag }}</span>
+  {% if pagina < total_pag %}<a href="/cadena?pagina={{ pagina + 1 }}">Siguiente →</a>{% endif %}
+</div>
+{% endblock %}

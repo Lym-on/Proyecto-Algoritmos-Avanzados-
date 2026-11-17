@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_estado.html" import badge, estado_cadena %}
+{% block titulo %}Bloque #{{ b.index }} · Origen Cusco{% endblock %}
+{% block contenido %}
+<h1>Bloque <span style="color:var(--acento)">#{{ b.index }}</span></h1>
+{{ estado_cadena(r) }}
+<section class="panel">
+  <header><h2>Detalles</h2>
+    <span>
+      {% if b.index > 0 %}<a href="/bloque/{{ b.index - 1 }}">← #{{ b.index - 1 }}</a>{% endif %}
+      {% if hay_siguiente %}&nbsp;<a href="/bloque/{{ b.index + 1 }}">#{{ b.index + 1 }} →</a>{% endif %}
+    </span>
+  </header>
+  <dl class="kv">
+    <dt>Estado</dt><dd>{{ badge(e) }} <span style="color:var(--suave)">{{ e.motivo }}</span></dd>
+    <dt>Altura</dt><dd>#{{ b.index }}</dd>
+    <dt>Registrado</dt><dd>{{ b.timestamp|fecha }}</dd>
+    <dt>Lote</dt><dd><a href="/lote/{{ b.lote }}">{{ b.lote }}</a> · {{ producto(b.lote) }}</dd>
+    <dt>Etapa</dt><dd>{{ b.etapa }}</dd>
+    <dt>Datos</dt><dd><pre>{{ b.datos|json_bonito }}</pre></dd>
+    <dt>Nonce</dt><dd class="mono">{{ b.nonce }}</dd>
+    <dt>Hash</dt><dd class="hash">{{ b.hash|hash_html }}</dd>
+    {% if recalculado != b.hash %}
+    <dt style="color:var(--mal)">Hash recalculado</dt><dd class="hash" style="color:var(--mal)">{{ recalculado }}<br><small>No coincide con el hash guardado: el contenido del bloque fue modificado.</small></dd>
+    {% endif %}
+    <dt>Hash previo</dt>
+    <dd class="hash">
+      {% if b.index == 0 %}0 <span style="color:var(--suave)">(bloque génesis)</span>
+      {% else %}<a href="/bloque/{{ b.index - 1 }}">{{ b.hash_previo }}</a>{% endif %}
+    </dd>
+    <dt>Siguiente bloque</dt>
+    <dd>{% if hay_siguiente %}<a href="/bloque/{{ b.index + 1 }}">#{{ b.index + 1 }}</a>{% else %}<span style="color:var(--suave)">Es el último bloque de la cadena</span>{% endif %}</dd>
+  </dl>
+</section>
+{% endblock %}
